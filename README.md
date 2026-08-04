@@ -7,19 +7,19 @@
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![OWASP](https://img.shields.io/badge/OWASP-black?style=for-the-badge&logo=owasp&logoColor=white)
 
-This repository features a robust and scalable **Vite + React.js** web application integrated with a comprehensive **DevSecOps** Continuous Integration and Continuous Deployment (CI/CD) pipeline. By embedding automated security checks and code quality gates at various stages, we ensure that securely validated code is continuously deployed.
+This training project demonstrates a Jenkins-based DevSecOps pipeline for building, scanning, and deploying a Vite application to a single Linux web server. It is intended to demonstrate the workflow and tooling rather than production operations.
 
 ---
 
 ## 🌟 Key Features
 
-- **Blazing Fast Frontend**: Built with Vite and React for optimal performance.
-- **Continuous Integration**: Automated build and testing with Jenkins.
+- **Frontend**: Built with Vite and React.
+- **Continuous Integration**: Automated dependency installation and build with Jenkins; automated tests are not currently included.
 - **Code Quality & SAST**: Continuous inspection of code health using **SonarQube**.
-- **Container & Filesystem Scanning**: Identifying misconfigurations and vulnerabilities with **Trivy**.
-- **Automated Deployment**: Seamless deployment utilizing `rsync` over SSH to production servers.
-- **Dynamic Security Scanning (DAST)**: Automated baseline security checks powered by **OWASP ZAP** in Docker.
-- **Intelligent Notifications**: Automated email reports encapsulating pipeline metrics and security logs.
+- **Container & Filesystem Scanning**: Reports misconfigurations and vulnerabilities with **Trivy**; failure thresholds are not currently configured.
+- **Automated Deployment**: Transfers the Vite build to a target Linux web server using `rsync` over SSH.
+- **Dynamic Security Scanning (DAST)**: Generates an **OWASP ZAP** baseline report after deployment without blocking the pipeline.
+- **Build Notifications**: Sends an email containing the pipeline result and attached ZAP report.
 
 ---
 
@@ -30,10 +30,11 @@ The Jenkins pipeline is structured into the following sequential stages:
 1. **Checkout Code**: Pulls the latest source code from the `main` branch.
 2. **Install & Build**: Installs NPM dependencies and compiles the Vite application.
 3. **SonarQube Analysis**: Executes static code analysis to spot bugs, code smells, and security hotspots.
-4. **Trivy Security Scan**: Scans the project filesystem for vulnerabilities in direct and transitive dependencies.
-5. **Deploy to Server**: Securely transfers the built artifacts (`./dist` folder) to the target web server (`/var/www/html/`).
-6. **OWASP ZAP Scan**: Runs a Dockerized OWASP ZAP baseline scan against the live deployed application.
-7. **Post-Build Actions**: Archives the ZAP vulnerability report and sends an exhaustive email to the stakeholders with the pipeline status and attached scanner report.
+4. **Quality Gate**: Waits up to five minutes for the SonarQube Quality Gate result and stops the pipeline if it fails.
+5. **Trivy Security Scan**: Scans the project filesystem for vulnerabilities in direct and transitive dependencies.
+6. **Deploy to Server**: Securely transfers the built artifacts (`./dist` folder) to the target web server (`/var/www/html/`).
+7. **OWASP ZAP Scan**: Runs a Dockerized OWASP ZAP baseline scan against the live deployed application.
+8. **Post-Build Actions**: Archives the ZAP report and sends an email with the pipeline status and attached report.
 
 ---
 
@@ -93,11 +94,40 @@ If you wish to develop or run the application locally without the pipeline:
    npm run dev
    ```
 
-4. **Build for production:**
+4. **Create an optimized build:**
    ```bash
    npm run build
    ```
 
 ---
 
-*This project is built and maintained with a focus on delivering high build-quality alongside airtight application security out-of-the-box.*
+## ⚠️ Limitations
+
+This repository represents a hands-on training project and is not presented as a production-ready deployment.
+
+Current limitations include:
+
+- The application is deployed to a single Linux web server without load balancing or high availability.
+- The current OWASP ZAP stage generates a report but does not block deployment or fail the pipeline. A future improvement is to define risk-based failure thresholds.
+- The Trivy scan runs without an explicit severity or exit-code policy, so detected vulnerabilities do not necessarily fail the pipeline.
+- Deployment uses password-based SSH credentials and disables strict host-key checking.
+- Automated rollback, monitoring, alerting, and a separate staging environment are not implemented.
+- The pipeline does not currently include automated unit or integration tests.
+
+---
+
+## 🚧 Future Improvements
+
+- Configure Trivy severity thresholds and pipeline failure conditions.
+- Define risk-based OWASP ZAP failure criteria.
+- Replace password-based deployment with SSH key authentication.
+- Enable secure SSH host-key verification.
+- Add automated application tests before security scanning.
+- Introduce staging and approval gates.
+- Add deployment rollback procedures.
+- Add monitoring and alerting.
+- Store build artifacts or container images in an artifact registry.
+
+---
+
+*This project is intended for practical DevSecOps learning and should be hardened before use in a production environment.*
